@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Preferences } from '@capacitor/preferences';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
 import { StanfordSleepinessData } from '../data/stanford-sleepiness-data';
@@ -12,11 +13,13 @@ export class SleepService {
 	public static AllOvernightData:OvernightSleepData[] = [];
 	public static AllSleepinessData:StanfordSleepinessData[] = [];
 
+	private static StorageKey:string = 'sleep-logs';
+
 	constructor() {
 		if(SleepService.LoadDefaultData) {
-			this.addDefaultData();
-		SleepService.LoadDefaultData = false;
-	}
+			SleepService.LoadDefaultData = false;
+			this.loadFromStorage();
+		}
 	}
 
 	private addDefaultData() {
@@ -41,10 +44,42 @@ export class SleepService {
 	public logOvernightData(sleepData:OvernightSleepData) {
 		SleepService.AllSleepData.push(sleepData);
 		SleepService.AllOvernightData.push(sleepData);
+		this.saveToStorage();
 	}
 
 	public logSleepinessData(sleepData:StanfordSleepinessData) {
 		SleepService.AllSleepData.push(sleepData);
 		SleepService.AllSleepinessData.push(sleepData);
+		this.saveToStorage();
+	}
+
+	private async saveToStorage() {
+		await Preferences.set({
+			key: SleepService.StorageKey,
+			value: JSON.stringify(SleepService.AllSleepData),
+		});
+	}
+
+	private async loadFromStorage() {
+		const { value } = await Preferences.get({ key: SleepService.StorageKey });
+		if (!value) {
+			this.addDefaultData();
+			return;
+		}
+
+		const saved:any[] = JSON.parse(value);
+		for (const item of saved) {
+			let data:SleepData;
+			if (item.sleepStart) {
+				data = new OvernightSleepData(new Date(item.sleepStart), new Date(item.sleepEnd));
+				SleepService.AllOvernightData.push(data as OvernightSleepData);
+			} else {
+				data = new StanfordSleepinessData(item.loggedValue, new Date(item.loggedAt));
+				SleepService.AllSleepinessData.push(data as StanfordSleepinessData);
+			}
+			data.id = item.id;
+			data.loggedAt = new Date(item.loggedAt);
+			SleepService.AllSleepData.push(data);
+		}
 	}
 }
