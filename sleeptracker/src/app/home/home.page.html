@@ -1,20 +1,99 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
+    <ion-title>Sleep Tracker</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
+      <ion-title size="large">Sleep Tracker</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+  <ion-list [inset]="true">
+    <ion-list-header>
+      <ion-label>Last night's sleep</ion-label>
+    </ion-list-header>
+    <ion-item>
+      <ion-label>Bedtime</ion-label>
+      <ion-datetime-button datetime="bedtime" slot="end"></ion-datetime-button>
+    </ion-item>
+    <ion-item>
+      <ion-label>Woke up</ion-label>
+      <ion-datetime-button datetime="wakeTime" slot="end"></ion-datetime-button>
+    </ion-item>
+    <ion-item>
+      @if (sleepError) {
+        <ion-label color="danger" class="ion-text-wrap">{{ sleepError }}</ion-label>
+      } @else {
+        <ion-label>Total</ion-label>
+        <ion-note slot="end">{{ sleepDurationText }}</ion-note>
+      }
+    </ion-item>
+  </ion-list>
+  <div class="ion-padding-horizontal">
+    <ion-button expand="block" (click)="saveSleep()" [disabled]="!!sleepError">Save Sleep</ion-button>
   </div>
+
+  <ion-list [inset]="true">
+    <ion-list-header>
+      <ion-label>How sleepy do you feel?</ion-label>
+    </ion-list-header>
+    <ion-radio-group [(ngModel)]="sleepinessValue">
+      @for (n of scaleOptions; track n) {
+        <ion-item>
+          <ion-radio [value]="n" labelPlacement="end" justify="start">
+            <span class="ion-text-wrap"><strong>{{ n }}</strong> · {{ scaleValues[n] }}</span>
+          </ion-radio>
+        </ion-item>
+      }
+    </ion-radio-group>
+    <ion-item>
+      <ion-label>Time</ion-label>
+      <ion-datetime-button datetime="sleepinessTime" slot="end"></ion-datetime-button>
+    </ion-item>
+  </ion-list>
+  <div class="ion-padding-horizontal">
+    <ion-button expand="block" (click)="saveSleepiness()" [disabled]="sleepinessValue === null">
+      {{ sleepinessValue === null ? 'Pick a level above' : 'Log Sleepiness' }}
+    </ion-button>
+  </div>
+
+  <ion-list [inset]="true">
+    <ion-list-header>
+      <ion-label>Logged entries</ion-label>
+    </ion-list-header>
+    @for (d of logsNewestFirst; track d.id) {
+      <ion-item>
+        <ion-label class="ion-text-wrap">
+          @if (isSleep(d)) {
+            <h2>🌙 {{ d.summaryString() }}</h2>
+            <p>{{ d.dateString() }}</p>
+          } @else {
+            <h2>☕ Sleepiness {{ d.summaryString() }}</h2>
+            <p>{{ d.dateString() }}, {{ timeString(d) }}</p>
+          }
+        </ion-label>
+      </ion-item>
+    } @empty {
+      <ion-item><ion-label>No logs yet.</ion-label></ion-item>
+    }
+  </ion-list>
+
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime id="bedtime" [(ngModel)]="bedtime" presentation="date-time"></ion-datetime>
+    </ng-template>
+  </ion-modal>
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime id="wakeTime" [(ngModel)]="wakeTime" presentation="date-time"></ion-datetime>
+    </ng-template>
+  </ion-modal>
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime id="sleepinessTime" [(ngModel)]="sleepinessTime" presentation="date-time"></ion-datetime>
+    </ng-template>
+  </ion-modal>
 </ion-content>
