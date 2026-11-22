@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController, IonCheckbox, IonIcon } from '@ionic/angular/standalone';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
 import { StanfordSleepinessData } from '../data/stanford-sleepiness-data';
+import { addIcons } from 'ionicons';
+import { trashOutline } from 'ionicons/icons';
 
 /* Converts a Date to a local ISO string */
 function toLocalISO(date:Date):string {
@@ -20,7 +22,8 @@ function toLocalISO(date:Date):string {
 	  FormsModule,
 	  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
 	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote,
-	  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent
+	  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
+	  IonCheckbox, IonIcon
 	],
   })
 export class HomePage {
@@ -30,8 +33,11 @@ export class HomePage {
   wakeTime:string = '';
   sleepinessValue:number | null = null;
   sleepinessTime:string = '';
+  selecting:boolean = false;
+  selectedIds = new Set<string>();
 
   constructor(public sleepService:SleepService, private toastCtrl:ToastController) {
+    addIcons({ trashOutline });
     this.resetSleepForm();
     this.resetSleepinessForm();
   }
@@ -129,6 +135,42 @@ export class HomePage {
       duration: 4000,
       position: 'bottom',
       buttons: [{ text: 'Undo', role: 'cancel', handler: () => this.sleepService.deleteData(data) }],
+    });
+    await toast.present();
+  }
+
+  /* Delete selected logs */
+  startSelecting() {
+    this.selecting = true;
+  }
+
+  cancelSelecting() {
+    this.selecting = false;
+    this.selectedIds.clear();
+  }
+
+  toggleSelected(d:SleepData) {
+    if (this.selectedIds.has(d.id)) {
+      this.selectedIds.delete(d.id);
+    } else {
+      this.selectedIds.add(d.id);
+    }
+  }
+
+  async deleteSelected() {
+    const removed = SleepService.AllSleepData
+      .map((d, index) => ({ d, index }))
+      .filter(item => this.selectedIds.has(item.d.id));
+    removed.forEach(item => this.sleepService.deleteData(item.d));
+    this.cancelSelecting();
+
+    const toast = await this.toastCtrl.create({
+      message: `Deleted ${removed.length} log${removed.length > 1 ? 's' : ''}`,
+      duration: 4000,
+      position: 'bottom',
+      buttons: [{ text: 'Undo', role: 'cancel', handler: () => {
+        removed.forEach(item => this.sleepService.restoreData(item.d, item.index));
+      }}],
     });
     await toast.present();
   }

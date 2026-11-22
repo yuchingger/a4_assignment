@@ -94,4 +94,12 @@ export class SleepService {
 		SleepService.AllSleepinessData = SleepService.AllSleepinessData.filter(d => d.id !== sleepData.id);
 		this.saveToStorage();
 	}
+
+	/* Undo a delete  */
+	public restoreData(sleepData:SleepData, index:number) {
+		SleepService.AllSleepData.splice(index, 0, sleepData);
+		SleepService.AllOvernightData = SleepService.AllSleepData.filter(d => d instanceof OvernightSleepData) as OvernightSleepData[];
+		SleepService.AllSleepinessData = SleepService.AllSleepData.filter(d => d instanceof StanfordSleepinessData) as StanfordSleepinessData[];
+		this.saveToStorage();
+	}
 }

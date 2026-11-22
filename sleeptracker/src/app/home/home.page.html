@@ -98,13 +98,31 @@
     </ion-button>
   </div>
 
-  <!--Logged entries-->
-  <ion-list [inset]="true">
+   <!-- Logged entries-->
+   <ion-list [inset]="true">
     <ion-list-header>
       <ion-label>Logged entries</ion-label>
+
+      <!-- Trash icon  -->
+      @if (!selecting) {
+        <ion-button (click)="startSelecting()" aria-label="Select logs to delete">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      } @else {
+        <ion-button (click)="cancelSelecting()">Cancel</ion-button>
+        <ion-button color="danger" (click)="deleteSelected()" [disabled]="selectedIds.size === 0">
+          Delete ({{ selectedIds.size }})
+        </ion-button>
+      }
     </ion-list-header>
     @for (d of logsNewestFirst; track d.id) {
       <ion-item>
+
+        <!-- Checkbox when select -->
+        @if (selecting) {
+          <ion-checkbox slot="start" [checked]="selectedIds.has(d.id)" (ionChange)="toggleSelected(d)"
+            aria-label="Select this log"></ion-checkbox>
+        }
         <ion-label class="ion-text-wrap">
           @if (isSleep(d)) {
             <h2>🌙 {{ d.summaryString() }}</h2>
@@ -119,8 +137,8 @@
       <ion-item><ion-label>No logs yet.</ion-label></ion-item>
     }
   </ion-list>
-  
-<!-- Date/time pickers (bottom sheets) -->
+
+  <!-- Date/time pickers open in bottom sheets when a datetime button is tapped -->
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime id="bedtime" [(ngModel)]="bedtime" presentation="date-time"></ion-datetime>
