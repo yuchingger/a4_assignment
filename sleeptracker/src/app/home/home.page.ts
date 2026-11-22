@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController } from '@ionic/angular/standalone';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
 import { StanfordSleepinessData } from '../data/stanford-sleepiness-data';
 
+/* Converts a Date to a local ISO string */
 function toLocalISO(date:Date):string {
   const pad = (n:number) => n.toString().padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
@@ -30,7 +31,7 @@ export class HomePage {
   sleepinessValue:number | null = null;
   sleepinessTime:string = '';
 
-  constructor(public sleepService:SleepService) {
+  constructor(public sleepService:SleepService, private toastCtrl:ToastController) {
     this.resetSleepForm();
     this.resetSleepinessForm();
   }
@@ -43,15 +44,18 @@ export class HomePage {
     return SleepService.AllSleepData;
   }
 
+  /* Summary card */
   get todayString():string {
     return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
+  /* Most recently logged overnight sleep */
   get lastSleep():OvernightSleepData | undefined {
     const all = SleepService.AllOvernightData;
     return all[all.length - 1];
   }
 
+  /* Most recent sleepiness log */
   get lastSleepiness():StanfordSleepinessData | undefined {
     return [...SleepService.AllSleepinessData]
       .sort((a, b) => b.loggedAt.getTime() - a.loggedAt.getTime())[0];
@@ -61,6 +65,7 @@ export class HomePage {
     return [...this.allSleepData].reverse();
   }
 
+  /* Overnight sleep */
   resetSleepForm() {
     const bed = new Date();
     bed.setDate(bed.getDate() - 1);
@@ -88,10 +93,13 @@ export class HomePage {
 
   saveSleep() {
     if (this.sleepError) return;
-    this.sleepService.logOvernightData(new OvernightSleepData(new Date(this.bedtime), new Date(this.wakeTime)));
+    const data = new OvernightSleepData(new Date(this.bedtime), new Date(this.wakeTime));
+    this.sleepService.logOvernightData(data);
+    this.showUndoToast(`Saved ${this.sleepDurationText} of sleep`, data);
     this.resetSleepForm();
   }
 
+  /* Sleepiness */
   resetSleepinessForm() {
     this.sleepinessValue = null;
     this.sleepinessTime = toLocalISO(new Date());
@@ -99,15 +107,29 @@ export class HomePage {
 
   saveSleepiness() {
     if (this.sleepinessValue === null) return;
-    this.sleepService.logSleepinessData(new StanfordSleepinessData(this.sleepinessValue, new Date(this.sleepinessTime)));
+    const data = new StanfordSleepinessData(this.sleepinessValue, new Date(this.sleepinessTime));
+    this.sleepService.logSleepinessData(data);
+    this.showUndoToast(`Logged sleepiness ${this.sleepinessValue}/7`, data);
     this.resetSleepinessForm();
   }
 
+  /* Helpers */
   isSleep(d:SleepData):boolean {
     return d instanceof OvernightSleepData;
   }
 
   timeString(d:SleepData):string {
     return d.loggedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  /* undo button */
+  async showUndoToast(message:string, data:SleepData) {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 4000,
+      position: 'bottom',
+      buttons: [{ text: 'Undo', role: 'cancel', handler: () => this.sleepService.deleteData(data) }],
+    });
+    await toast.present();
   }
 }

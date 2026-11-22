@@ -15,6 +15,7 @@ export class SleepService {
 
 	private static StorageKey:string = 'sleep-logs';
 
+	/* Load saved logs when app starts. */
 	constructor() {
 		if(SleepService.LoadDefaultData) {
 			SleepService.LoadDefaultData = false;
@@ -41,18 +42,21 @@ export class SleepService {
 		this.logOvernightData(new OvernightSleepData(goToBed, wakeUp));
 	}
 
+	/* Adds a overnight sleep log and saves */
 	public logOvernightData(sleepData:OvernightSleepData) {
 		SleepService.AllSleepData.push(sleepData);
 		SleepService.AllOvernightData.push(sleepData);
 		this.saveToStorage();
 	}
 
+	/* Adds a sleepiness log and saves */
 	public logSleepinessData(sleepData:StanfordSleepinessData) {
 		SleepService.AllSleepData.push(sleepData);
 		SleepService.AllSleepinessData.push(sleepData);
 		this.saveToStorage();
 	}
 
+	/* Saves every log and called each time a log is added / removed. */
 	private async saveToStorage() {
 		await Preferences.set({
 			key: SleepService.StorageKey,
@@ -81,5 +85,13 @@ export class SleepService {
 			data.loggedAt = new Date(item.loggedAt);
 			SleepService.AllSleepData.push(data);
 		}
+	}
+
+	/* Removes a log and updates storage */
+	public deleteData(sleepData:SleepData) {
+		SleepService.AllSleepData = SleepService.AllSleepData.filter(d => d.id !== sleepData.id);
+		SleepService.AllOvernightData = SleepService.AllOvernightData.filter(d => d.id !== sleepData.id);
+		SleepService.AllSleepinessData = SleepService.AllSleepinessData.filter(d => d.id !== sleepData.id);
+		this.saveToStorage();
 	}
 }
