@@ -11,6 +11,41 @@
     </ion-toolbar>
   </ion-header>
 
+  <!-- Summary -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-subtitle>{{ todayString }}</ion-card-subtitle>
+      <ion-card-title>Your summary</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-label class="ion-text-wrap">
+            <p>🌙 Last sleep</p>
+            @if (lastSleep) {
+              <h2>{{ lastSleep.summaryString() }}</h2>
+              <p>{{ lastSleep.dateString() }}</p>
+            } @else {
+              <h2>No sleep logged yet</h2>
+            }
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label class="ion-text-wrap">
+            <p>☕ Latest sleepiness</p>
+            @if (lastSleepiness) {
+              <h2>{{ lastSleepiness.summaryString() }}</h2>
+              <p>{{ lastSleepiness.dateString() }}, {{ timeString(lastSleepiness) }}</p>
+            } @else {
+              <h2>No sleepiness logged yet</h2>
+            }
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <!--Log overnight sleep-->
   <ion-list [inset]="true">
     <ion-list-header>
       <ion-label>Last night's sleep</ion-label>
@@ -24,6 +59,8 @@
       <ion-datetime-button datetime="wakeTime" slot="end"></ion-datetime-button>
     </ion-item>
     <ion-item>
+
+      <!--Live feedback-->
       @if (sleepError) {
         <ion-label color="danger" class="ion-text-wrap">{{ sleepError }}</ion-label>
       } @else {
@@ -36,6 +73,7 @@
     <ion-button expand="block" (click)="saveSleep()" [disabled]="!!sleepError">Save Sleep</ion-button>
   </div>
 
+  <!--Log sleepiness-->
   <ion-list [inset]="true">
     <ion-list-header>
       <ion-label>How sleepy do you feel?</ion-label>
@@ -60,6 +98,7 @@
     </ion-button>
   </div>
 
+  <!--Logged entries-->
   <ion-list [inset]="true">
     <ion-list-header>
       <ion-label>Logged entries</ion-label>
@@ -80,7 +119,8 @@
       <ion-item><ion-label>No logs yet.</ion-label></ion-item>
     }
   </ion-list>
-
+  
+<!-- Date/time pickers (bottom sheets) -->
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime id="bedtime" [(ngModel)]="bedtime" presentation="date-time"></ion-datetime>

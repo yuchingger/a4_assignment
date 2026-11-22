@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent } from '@ionic/angular/standalone';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
@@ -12,15 +12,16 @@ function toLocalISO(date:Date):string {
 }
 
 @Component({
-  selector: 'app-home',
-  templateUrl: 'home.page.html',
-  styleUrls: ['home.page.scss'],
-  imports: [
-    FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
-    IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote
-  ],
-})
+	selector: 'app-home',
+	templateUrl: 'home.page.html',
+	styleUrls: ['home.page.scss'],
+	imports: [
+	  FormsModule,
+	  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
+	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote,
+	  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent
+	],
+  })
 export class HomePage {
   scaleValues = StanfordSleepinessData.ScaleValues;
   scaleOptions = [1, 2, 3, 4, 5, 6, 7];
@@ -40,6 +41,20 @@ export class HomePage {
 
   get allSleepData() {
     return SleepService.AllSleepData;
+  }
+
+  get todayString():string {
+    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  get lastSleep():OvernightSleepData | undefined {
+    const all = SleepService.AllOvernightData;
+    return all[all.length - 1];
+  }
+
+  get lastSleepiness():StanfordSleepinessData | undefined {
+    return [...SleepService.AllSleepinessData]
+      .sort((a, b) => b.loggedAt.getTime() - a.loggedAt.getTime())[0];
   }
 
   get logsNewestFirst():SleepData[] {
