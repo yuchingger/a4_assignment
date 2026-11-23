@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController, IonCheckbox, IonIcon, IonItemGroup, IonItemDivider } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote, ToastController, IonCheckbox, IonIcon, IonItemGroup, IonItemDivider } from '@ionic/angular/standalone';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
@@ -22,13 +22,13 @@ function toLocalISO(date:Date):string {
 	  FormsModule,
 	  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
 	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote,
-	  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
 	  IonCheckbox, IonIcon, IonItemGroup, IonItemDivider
 	],
   })
 export class HomePage {
   scaleValues = StanfordSleepinessData.ScaleValues;
   scaleOptions = [1, 2, 3, 4, 5, 6, 7];
+  sleepinessShort = ['', 'Wide awake', 'Alert', 'Relaxed', 'A bit foggy', 'Foggy', 'Sleepy', 'Very sleepy'];
   bedtime:string = '';
   wakeTime:string = '';
   sleepinessValue:number | null = null;
@@ -119,6 +119,20 @@ export class HomePage {
     if (hours >= 7) return 'good';
     if (hours >= 6) return 'okay';
     return 'short';
+  }
+
+  sleepStatus(d:OvernightSleepData):string {
+    const words = { good: 'Enough sleep', okay: 'A little short', short: 'Not enough sleep' };
+    return words[this.sleepQuality(d)];
+  }
+
+  whenText(date:Date):string {
+    const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === new Date().toDateString()) return 'Today, ' + time;
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday, ' + time;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + time;
   }
 
   sleepFace(d:OvernightSleepData):string {

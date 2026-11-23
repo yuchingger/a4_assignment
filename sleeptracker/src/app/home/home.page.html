@@ -11,40 +11,33 @@
     </ion-toolbar>
   </ion-header>
 
-  <!-- Summary -->
-  <ion-card class="card-sky">
-    <ion-card-header>
-      <ion-card-subtitle>{{ todayString }}</ion-card-subtitle>
-      <ion-card-title>Your summary</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-list lines="none">
-        <ion-item>
-          <ion-label class="ion-text-wrap">
-            <p>🌙 Last sleep</p>
-            @if (lastSleep) {
-              <h2>{{ durationText(lastSleep) }} {{ sleepFace(lastSleep) }}</h2>
-              <p>{{ sleepTimes(lastSleep) }}</p>
-            } @else {
-              <h2>No sleep logged yet</h2>
-            }
-          </ion-label>
-        </ion-item>
-        <ion-item>
-          <ion-label class="ion-text-wrap">
-            <p>☕ Latest sleepiness</p>
-            @if (lastSleepiness) {
-              <h2>Level {{ lastSleepiness.value }}</h2>
-              <p>{{ scaleValues[lastSleepiness.value] }}</p>
-              <p>{{ lastSleepiness.dateString() }}, {{ timeString(lastSleepiness) }}</p>
-            } @else {
-              <h2>No sleepiness logged yet</h2>
-            }
-          </ion-label>
-        </ion-item>
-      </ion-list>
-    </ion-card-content>
-  </ion-card>
+  <!-- Summary-->
+  <p class="today">{{ todayString }}</p>
+  <div class="stats">
+    <div class="stat stat-night">
+      <p class="stat-label">Last night</p>
+      @if (lastSleep) {
+        <p class="stat-value">{{ durationText(lastSleep) }}</p>
+        <p class="stat-sub">{{ sleepTimes(lastSleep) }}</p>
+        <p class="stat-status status-{{ sleepQuality(lastSleep) }}">{{ sleepStatus(lastSleep) }}</p>
+      } @else {
+        <p class="stat-value">--</p>
+        <p class="stat-sub">No sleep logged yet</p>
+      }
+    </div>
+
+    <div class="stat stat-day">
+      <p class="stat-label">Sleepiness</p>
+      @if (lastSleepiness) {
+        <p class="stat-value">{{ lastSleepiness.value }}<span class="stat-unit"> / 7</span></p>
+        <p class="stat-sub">{{ sleepinessShort[lastSleepiness.value] }}</p>
+        <p class="stat-status">{{ whenText(lastSleepiness.loggedAt) }}</p>
+      } @else {
+        <p class="stat-value">--</p>
+        <p class="stat-sub">Not logged yet</p>
+      }
+    </div>
+  </div>
 
   <!--Log overnight sleep-->
   <ion-list [inset]="true" class="card-night">
@@ -97,6 +90,7 @@
           <h2>{{ scaleValues[sleepinessValue] }}</h2>
         }
       </ion-label>
+    </ion-item>
     <ion-item>
       <ion-label>Time</ion-label>
       <ion-datetime-button datetime="sleepinessTime" slot="end"></ion-datetime-button>

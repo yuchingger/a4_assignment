@@ -28,9 +28,10 @@ ion-list.list-inset {
   border-radius: 28px;
   box-shadow: none;
 }
-.card-sky { --background: var(--card-sky); }
+
 ion-list.card-night { background: var(--card-night); }
 ion-list.card-day { background: var(--card-day); }
+ion-list.card-white { background: var(--card-white); }
 
 ion-card ion-list,
 ion-card ion-item,
@@ -66,3 +67,59 @@ ion-button[shape="round"] {
   font-size: 17px;
   font-weight: 600;
 }
+
+.today {
+  margin: 0 20px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ion-color-medium);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 16px 8px;
+}
+
+.stat {
+  border-radius: 24px;
+  padding: 14px 16px;
+
+  p { margin: 0; }
+}
+.stat-night { background: var(--card-night); }
+.stat-day { background: var(--card-day); }
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+.stat-value {
+  margin-top: 4px !important;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.stat-unit {
+  font-size: 17px;
+  font-weight: 500;
+  opacity: 0.6;
+}
+.stat-sub {
+  margin-top: 6px !important;
+  font-size: 13px;
+  opacity: 0.75;
+}
+.stat-status {
+  margin-top: 10px !important;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.status-good { color: #1f7a45; }
+.status-okay { color: #a35a00; }
+.status-short { color: #c0392b; }
