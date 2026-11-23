@@ -18,3 +18,51 @@ ion-list {
 .dot-good { background: var(--ion-color-success); }
 .dot-okay { background: var(--ion-color-warning); }
 .dot-short { background: var(--ion-color-danger); }
+
+.face {
+  font-size: 20px;
+}
+
+ion-card,
+ion-list.list-inset {
+  border-radius: 28px;
+  box-shadow: none;
+}
+.card-sky { --background: var(--card-sky); }
+ion-list.card-night { background: var(--card-night); }
+ion-list.card-day { background: var(--card-day); }
+
+ion-card ion-list,
+ion-card ion-item,
+ion-list.list-inset ion-list-header,
+ion-list.list-inset ion-item,
+ion-list.list-inset ion-item-divider {
+  --background: transparent;
+  background: transparent;
+}
+
+ion-card-title,
+ion-list-header ion-label {
+  font-weight: 600;
+}
+
+ion-item-divider {
+  font-weight: 600;
+  color: var(--ion-color-medium);
+}
+
+ion-button[shape="round"] {
+  height: 52px;
+  font-weight: 600;
+  margin: 0 4px 8px;
+}
+
+.scale {
+  --background: rgba(255, 255, 255, 0.6);
+  width: 100%;
+}
+.scale ion-segment-button {
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
+}

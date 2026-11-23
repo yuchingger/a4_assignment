@@ -12,7 +12,7 @@
   </ion-header>
 
   <!-- Summary -->
-  <ion-card>
+  <ion-card class="card-sky">
     <ion-card-header>
       <ion-card-subtitle>{{ todayString }}</ion-card-subtitle>
       <ion-card-title>Your summary</ion-card-title>
@@ -23,8 +23,8 @@
           <ion-label class="ion-text-wrap">
             <p>🌙 Last sleep</p>
             @if (lastSleep) {
-              <h2>{{ lastSleep.summaryString() }}</h2>
-              <p>{{ lastSleep.dateString() }}</p>
+              <h2>{{ durationText(lastSleep) }} {{ sleepFace(lastSleep) }}</h2>
+              <p>{{ sleepTimes(lastSleep) }}</p>
             } @else {
               <h2>No sleep logged yet</h2>
             }
@@ -34,7 +34,8 @@
           <ion-label class="ion-text-wrap">
             <p>☕ Latest sleepiness</p>
             @if (lastSleepiness) {
-              <h2>{{ lastSleepiness.summaryString() }}</h2>
+              <h2>Level {{ lastSleepiness.value }}</h2>
+              <p>{{ scaleValues[lastSleepiness.value] }}</p>
               <p>{{ lastSleepiness.dateString() }}, {{ timeString(lastSleepiness) }}</p>
             } @else {
               <h2>No sleepiness logged yet</h2>
@@ -46,7 +47,7 @@
   </ion-card>
 
   <!--Log overnight sleep-->
-  <ion-list [inset]="true">
+  <ion-list [inset]="true" class="card-night">
     <ion-list-header>
       <ion-label>Last night's sleep</ion-label>
     </ion-list-header>
@@ -70,36 +71,45 @@
     </ion-item>
   </ion-list>
   <div class="ion-padding-horizontal">
-    <ion-button expand="block" (click)="saveSleep()" [disabled]="!!sleepError">Save Sleep</ion-button>
+    <ion-button expand="block" shape="round" (click)="saveSleep()" [disabled]="!!sleepError">Save Sleep</ion-button>
   </div>
 
   <!--Log sleepiness-->
-  <ion-list [inset]="true">
+  <ion-list [inset]="true" class="card-day">
     <ion-list-header>
       <ion-label>How sleepy do you feel?</ion-label>
     </ion-list-header>
-    <ion-radio-group [(ngModel)]="sleepinessValue">
-      @for (n of scaleOptions; track n) {
-        <ion-item>
-          <ion-radio [value]="n" labelPlacement="end" justify="start">
-            <span class="ion-text-wrap"><strong>{{ n }}</strong> · {{ scaleValues[n] }}</span>
-          </ion-radio>
-        </ion-item>
-      }
-    </ion-radio-group>
+    <!-- 1-7 level -->
+    <ion-item lines="none">
+      <ion-segment [(ngModel)]="sleepinessValue" class="scale">
+        @for (n of scaleOptions; track n) {
+          <ion-segment-button [value]="n">
+            <ion-label>{{ n }}</ion-label>
+          </ion-segment-button>
+        }
+      </ion-segment>
+    </ion-item>
+    <ion-item>
+      <ion-label class="ion-text-wrap">
+        @if (sleepinessValue === null) {
+          <p>1 = wide awake · 7 = about to fall asleep</p>
+        } @else {
+          <h2>{{ scaleValues[sleepinessValue] }}</h2>
+        }
+      </ion-label>
     <ion-item>
       <ion-label>Time</ion-label>
       <ion-datetime-button datetime="sleepinessTime" slot="end"></ion-datetime-button>
     </ion-item>
   </ion-list>
   <div class="ion-padding-horizontal">
-    <ion-button expand="block" (click)="saveSleepiness()" [disabled]="sleepinessValue === null">
+    <ion-button expand="block" shape="round" (click)="saveSleepiness()" [disabled]="sleepinessValue === null">
       {{ sleepinessValue === null ? 'Pick a level above' : 'Log Sleepiness' }}
     </ion-button>
   </div>
 
-   <!-- Logged entries-->
-   <ion-list [inset]="true">
+  <!-- Logged entries-->
+  <ion-list [inset]="true" class="card-white">
     <ion-list-header>
       <ion-label>Logged entries</ion-label>
 
@@ -117,7 +127,7 @@
     </ion-list-header>
     @for (group of logGroups; track group.label) {
       <ion-item-group>
-        <!-- Date header -->
+        <!-- Day header -->
         <ion-item-divider>
           <ion-label>{{ group.label }}</ion-label>
         </ion-item-divider>
@@ -134,9 +144,9 @@
                 <h2>🌙 {{ sleepTimes(d) }}</h2>
                 <p>Sleep</p>
               </ion-label>
-              <!-- Sleep length + colour dot -->
+              <!-- Sleep length + face -->
               <ion-note slot="end" class="duration">
-                {{ durationText(d) }} <span class="dot dot-{{ sleepQuality(d) }}"></span>
+                {{ durationText(d) }} <span class="face" [attr.aria-label]="sleepQuality(d)">{{ sleepFace(d) }}</span>
               </ion-note>
             } @else {
               <ion-label class="ion-text-wrap">
@@ -153,7 +163,7 @@
     }
   </ion-list>
 
-  <!-- Date/time pickers open in bottom sheets when a datetime button is tapped -->
+  <!-- Date/time pickers (bottom sheets) -->
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime id="bedtime" [(ngModel)]="bedtime" presentation="date-time"></ion-datetime>

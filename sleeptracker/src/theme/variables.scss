@@ -1,2 +1,37 @@
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
+
+/* "Night and day" theme: blue for night (sleep), yellow for day (sleepiness), navy ink. */
+:root {
+    /* Rounded, friendly font (loaded at the top of global.scss) */
+    --ion-font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  
+    /* Cool white page, navy text */
+    --ion-background-color: #f5f8fc;
+    --ion-background-color-rgb: 245, 248, 252;
+    --ion-text-color: #1f2a44;
+    --ion-text-color-rgb: 31, 42, 68;
+    --ion-toolbar-background: #f5f8fc;
+  
+    /* Primary: navy, like the night sky. Used for buttons, checkmarks and the trash icon */
+    --ion-color-primary: #1f2a44;
+    --ion-color-primary-rgb: 31, 42, 68;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255, 255, 255;
+    --ion-color-primary-shade: #1b253c;
+    --ion-color-primary-tint: #353f57;
+  
+    /* Danger: soft red for errors and Delete */
+    --ion-color-danger: #e05a64;
+    --ion-color-danger-rgb: 224, 90, 100;
+    --ion-color-danger-contrast: #ffffff;
+    --ion-color-danger-contrast-rgb: 255, 255, 255;
+    --ion-color-danger-shade: #c54f58;
+    --ion-color-danger-tint: #e36b74;
+  
+    /* Card colours (used in home.page.scss) */
+    --card-sky: #e4eefb;    /* summary */
+    --card-night: #cfe2f7;  /* overnight sleep */
+    --card-day: #fcf0bf;    /* daytime sleepiness */
+    --card-white: #ffffff;  /* logged entries */
+  }

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController, IonCheckbox, IonIcon, IonItemGroup, IonItemDivider } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController, IonCheckbox, IonIcon, IonItemGroup, IonItemDivider } from '@ionic/angular/standalone';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
@@ -21,7 +21,7 @@ function toLocalISO(date:Date):string {
 	imports: [
 	  FormsModule,
 	  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
-	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote,
+	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote,
 	  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
 	  IonCheckbox, IonIcon, IonItemGroup, IonItemDivider
 	],
@@ -119,6 +119,11 @@ export class HomePage {
     if (hours >= 7) return 'good';
     if (hours >= 6) return 'okay';
     return 'short';
+  }
+
+  sleepFace(d:OvernightSleepData):string {
+    const faces = { good: '😊', okay: '😐', short: '🥱' };
+    return faces[this.sleepQuality(d)];
   }
 
   asSleepiness(d:SleepData):StanfordSleepinessData {
