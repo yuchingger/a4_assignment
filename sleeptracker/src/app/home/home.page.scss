@@ -42,6 +42,12 @@ ion-button[shape="round"] {
   font-weight: 600;
 }
 
+/* Grey helper text in forms */
+.hint {
+  font-size: 13px !important;
+  color: var(--ion-color-medium) !important;
+}
+
 /* Summary */
 
 .today {
@@ -63,11 +69,22 @@ ion-button[shape="round"] {
 .stat {
   border-radius: 24px;
   padding: 14px 16px;
+  border: 1.5px solid transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 
   p { margin: 0; }
+  &:active { transform: scale(0.98); }
 }
 .stat-night { background: var(--card-night); }
 .stat-day { background: var(--card-day); }
+
+/* Not logged today: dashed outline */
+.stat.todo { background: transparent; }
+.stat-night.todo { border: 1.5px dashed #9cc0ea; }
+.stat-day.todo { border: 1.5px dashed #e6cf6a; }
 
 .stat-label {
   font-size: 14px;
@@ -99,6 +116,18 @@ ion-button[shape="round"] {
 .status-good { color: #1f7a45; }
 .status-okay { color: #a35a00; }
 .status-short { color: #c0392b; }
+
+.stat-question {
+  margin-top: 6px !important;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.stat-tap {
+  margin-top: 10px !important;
+  font-size: 13px;
+  font-weight: 600;
+}
 
 /* History: week strip */
 

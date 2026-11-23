@@ -56,14 +56,20 @@ export class HomePage {
     return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
-  get lastSleep():OvernightSleepData | undefined {
-    const all = SleepService.AllOvernightData;
-    return all[all.length - 1];
+  get todaySleep():OvernightSleepData | undefined {
+    const today = this.sleepsOn(new Date());
+    return today[today.length - 1];
   }
 
-  get lastSleepiness():StanfordSleepinessData | undefined {
-    return [...SleepService.AllSleepinessData]
+  get todaySleepiness():StanfordSleepinessData | undefined {
+    return SleepService.AllSleepinessData
+      .filter(d => this.sameDay(d.loggedAt, new Date()))
       .sort((a, b) => b.loggedAt.getTime() - a.loggedAt.getTime())[0];
+  }
+
+  /* Tap a tile to scroll to its form */
+  scrollTo(id:string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   /* History */
@@ -152,15 +158,6 @@ export class HomePage {
     return words[this.sleepQuality(d)];
   }
 
-  whenText(date:Date):string {
-    const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === new Date().toDateString()) return 'Today, ' + time;
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday, ' + time;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + time;
-  }
-
   sleepFace(d:OvernightSleepData):string {
     const faces = { good: '😊', okay: '😐', short: '🥱' };
     return faces[this.sleepQuality(d)];
@@ -184,6 +181,15 @@ export class HomePage {
 
   get sleepDurationText():string {
     return `${Math.floor(this.sleepMinutes / 60)}h ${this.sleepMinutes % 60}m`;
+  }
+
+  /* Already logged a sleep for this wake day (one per day) */
+  get sleepAlreadyLogged():boolean {
+    return this.sleepsOn(new Date(this.wakeTime)).length > 0;
+  }
+
+  get wakeDayText():string {
+    return new Date(this.wakeTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   /* prevent error */

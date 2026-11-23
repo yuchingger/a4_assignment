@@ -12,38 +12,48 @@
   </ion-header>
 
   <!-- Summary -->
-  <p class="today">{{ todayString }}</p>
+  <p class="today">{{ todayString }} · Today</p>
   <div class="stats">
-    <div class="stat stat-night">
+    <button type="button" class="stat stat-night" [class.todo]="!todaySleep" (click)="scrollTo('log-sleep')">
       <p class="stat-label">Last night</p>
-      @if (lastSleep) {
-        <p class="stat-value">{{ durationText(lastSleep) }}</p>
-        <p class="stat-sub">{{ sleepTimes(lastSleep) }}</p>
-        <p class="stat-status status-{{ sleepQuality(lastSleep) }}">{{ sleepStatus(lastSleep) }}</p>
+      @if (todaySleep) {
+        <p class="stat-value">{{ durationText(todaySleep) }}</p>
+        <p class="stat-sub">{{ sleepTimes(todaySleep) }}</p>
+        <p class="stat-status status-{{ sleepQuality(todaySleep) }}">✓ {{ sleepStatus(todaySleep) }}</p>
       } @else {
-        <p class="stat-value">--</p>
-        <p class="stat-sub">No sleep logged yet</p>
+        <p class="stat-question">How did you sleep?</p>
+        <p class="stat-tap">Log sleep ↓</p>
       }
-    </div>
+    </button>
 
-    <div class="stat stat-day">
+    <button type="button" class="stat stat-day" [class.todo]="!todaySleepiness" (click)="scrollTo('log-sleepiness')">
       <p class="stat-label">Sleepiness</p>
-      @if (lastSleepiness) {
-        <p class="stat-value">{{ lastSleepiness.value }}<span class="stat-unit"> / 7</span></p>
-        <p class="stat-sub">{{ sleepinessShort[lastSleepiness.value] }}</p>
-        <p class="stat-status">{{ whenText(lastSleepiness.loggedAt) }}</p>
+      @if (todaySleepiness) {
+        <p class="stat-value">{{ todaySleepiness.value }}<span class="stat-unit"> / 7</span></p>
+        <p class="stat-sub">{{ sleepinessShort[todaySleepiness.value] }} · {{ timeString(todaySleepiness) }}</p>
+        <p class="stat-tap">Log again ↓</p>
       } @else {
-        <p class="stat-value">--</p>
-        <p class="stat-sub">Not logged yet</p>
+        <p class="stat-question">How alert are you now?</p>
+        <p class="stat-tap">Log now ↓</p>
       }
-    </div>
+    </button>
   </div>
 
   <!-- Log overnight sleep -->
-  <ion-list [inset]="true" class="card-night">
+  <ion-list [inset]="true" class="card-night" id="log-sleep">
     <ion-list-header>
-      <ion-label>Last night's sleep</ion-label>
+      <ion-label>Log your sleep</ion-label>
     </ion-list-header>
+    <!-- Hint -->
+    <ion-item lines="none">
+      <ion-label class="ion-text-wrap">
+        @if (sleepAlreadyLogged) {
+          <p class="hint">✓ Already logged for {{ wakeDayText }}. Only save again to fix a mistake.</p>
+        } @else {
+          <p class="hint">We filled in 11 PM – 7 AM. Change it if needed.</p>
+        }
+      </ion-label>
+    </ion-item>
     <ion-item>
       <ion-label>Bedtime</ion-label>
       <ion-datetime-button datetime="bedtime" slot="end"></ion-datetime-button>
@@ -67,11 +77,11 @@
   </div>
 
   <!-- Log sleepiness  -->
-  <ion-list [inset]="true" class="card-day">
+  <ion-list [inset]="true" class="card-day" id="log-sleepiness">
     <ion-list-header>
-      <ion-label>How sleepy do you feel?</ion-label>
+      <ion-label>Log how sleepy you feel</ion-label>
     </ion-list-header>
-    <!-- 1-7  -->
+    <!-- 1-7 -->
     <ion-item lines="none">
       <ion-segment [(ngModel)]="sleepinessValue" class="scale">
         @for (n of scaleOptions; track n) {
@@ -84,14 +94,14 @@
     <ion-item>
       <ion-label class="ion-text-wrap">
         @if (sleepinessValue === null) {
-          <p>1 = wide awake · 7 = about to fall asleep</p>
+          <p class="hint">Tap a number: 1 = wide awake, 7 = about to fall asleep</p>
         } @else {
           <h2>{{ scaleValues[sleepinessValue] }}</h2>
         }
       </ion-label>
     </ion-item>
     <ion-item>
-      <ion-label>Time</ion-label>
+      <ion-label>Felt at</ion-label>
       <ion-datetime-button datetime="sleepinessTime" slot="end"></ion-datetime-button>
     </ion-item>
   </ion-list>
