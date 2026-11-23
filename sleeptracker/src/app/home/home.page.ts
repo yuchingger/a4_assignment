@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController, IonCheckbox, IonIcon } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, ToastController, IonCheckbox, IonIcon, IonItemGroup, IonItemDivider } from '@ionic/angular/standalone';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
@@ -23,7 +23,7 @@ function toLocalISO(date:Date):string {
 	  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
 	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonRadioGroup, IonRadio, IonNote,
 	  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
-	  IonCheckbox, IonIcon
+	  IonCheckbox, IonIcon, IonItemGroup, IonItemDivider
 	],
   })
 export class HomePage {
@@ -67,8 +67,62 @@ export class HomePage {
       .sort((a, b) => b.loggedAt.getTime() - a.loggedAt.getTime())[0];
   }
 
-  get logsNewestFirst():SleepData[] {
-    return [...this.allSleepData].reverse();
+    /* Logs grouped by day, newest day first. A night of sleep belongs to the day you woke up. */
+  get logGroups():{ label:string, logs:SleepData[] }[] {
+    const groups = new Map<string, { date:Date, logs:SleepData[] }>();
+    for (const d of this.allSleepData) {
+      const date = this.logTime(d);
+      const key = date.toDateString();
+      if (!groups.has(key)) {
+        groups.set(key, { date, logs: [] });
+      }
+      groups.get(key)!.logs.push(d);
+    }
+    return [...groups.values()]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .map(g => ({
+        label: this.dayLabel(g.date),
+        logs: g.logs.sort((a, b) => this.logTime(b).getTime() - this.logTime(a).getTime()),
+      }));
+  }
+
+  /* The time used to place a log: wake time for sleep, logged time for sleepiness. */
+  private logTime(d:SleepData):Date {
+    return d instanceof OvernightSleepData ? d.end : d.loggedAt;
+  }
+
+  /* "Today · Sun, Nov 22", "Yesterday · Sat, Nov 21", or "Fri, Nov 20". */
+  private dayLabel(date:Date):string {
+    const text = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === new Date().toDateString()) return 'Today · ' + text;
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday · ' + text;
+    return text;
+  }
+
+  /* Bedtime to wake time without dates, e.g. "11:11 PM → 8:11 AM". */
+  sleepTimes(d:OvernightSleepData):string {
+    const time = (t:Date) => t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return time(d.start) + ' → ' + time(d.end);
+  }
+
+  /* Short length of sleep, e.g. "9h 0m". */
+  durationText(d:OvernightSleepData):string {
+    const mins = d.durationMinutes();
+    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  }
+
+  /* Colour dot for "did I sleep enough?": 7h+ good, 6-7h okay, under 6h short. */
+  sleepQuality(d:OvernightSleepData):'good' | 'okay' | 'short' {
+    const hours = d.durationMinutes() / 60;
+    if (hours >= 7) return 'good';
+    if (hours >= 6) return 'okay';
+    return 'short';
+  }
+
+  asSleepiness(d:SleepData):StanfordSleepinessData {
+    return d as StanfordSleepinessData;
   }
 
   /* Overnight sleep */
@@ -120,7 +174,7 @@ export class HomePage {
   }
 
   /* Helpers */
-  isSleep(d:SleepData):boolean {
+  isSleep(d:SleepData):d is OvernightSleepData {
     return d instanceof OvernightSleepData;
   }
 

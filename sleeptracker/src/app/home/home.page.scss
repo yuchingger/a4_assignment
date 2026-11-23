@@ -1,3 +1,20 @@
 ion-list {
   margin-bottom: 12px;
 }
+
+.duration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--ion-text-color);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot-good { background: var(--ion-color-success); }
+.dot-okay { background: var(--ion-color-warning); }
+.dot-short { background: var(--ion-color-danger); }

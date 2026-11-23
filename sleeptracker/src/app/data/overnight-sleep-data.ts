@@ -21,6 +21,12 @@ export class OvernightSleepData extends SleepData {
 		return Math.floor(difference_ms / (1000*60*60)) + " hours, " + Math.floor(difference_ms / (1000*60) % 60) + " minutes.";
 	}
 
+	get start():Date { return this.sleepStart; }
+	get end():Date { return this.sleepEnd; }
+	durationMinutes():number {
+		return Math.round((this.sleepEnd.getTime() - this.sleepStart.getTime()) / (1000 * 60));
+	}
+
 	override dateString():string {
 		return "Night of " + this.sleepStart.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 	}
