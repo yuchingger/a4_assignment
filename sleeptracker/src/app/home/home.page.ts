@@ -1,30 +1,29 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote, ToastController, IonCheckbox, IonIcon, IonItemGroup, IonItemDivider } from '@ionic/angular/standalone';
+import {IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel, IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote, ToastController, IonCheckbox, IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { trashOutline, chevronBack, chevronForward } from 'ionicons/icons';
 import { SleepService } from '../services/sleep.service';
 import { SleepData } from '../data/sleep-data';
 import { OvernightSleepData } from '../data/overnight-sleep-data';
 import { StanfordSleepinessData } from '../data/stanford-sleepiness-data';
-import { addIcons } from 'ionicons';
-import { trashOutline } from 'ionicons/icons';
 
-/* Converts a Date to a local ISO string */
 function toLocalISO(date:Date):string {
   const pad = (n:number) => n.toString().padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
 }
 
 @Component({
-	selector: 'app-home',
-	templateUrl: 'home.page.html',
-	styleUrls: ['home.page.scss'],
-	imports: [
-	  FormsModule,
-	  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
-	  IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote,
-	  IonCheckbox, IonIcon, IonItemGroup, IonItemDivider
-	],
-  })
+  selector: 'app-home',
+  templateUrl: 'home.page.html',
+  styleUrls: ['home.page.scss'],
+  imports: [
+    FormsModule,
+    IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
+    IonDatetime, IonDatetimeButton, IonModal, IonButton, IonSegment, IonSegmentButton, IonNote,
+    IonCheckbox, IonIcon
+  ],
+})
 export class HomePage {
   scaleValues = StanfordSleepinessData.ScaleValues;
   scaleOptions = [1, 2, 3, 4, 5, 6, 7];
@@ -33,11 +32,13 @@ export class HomePage {
   wakeTime:string = '';
   sleepinessValue:number | null = null;
   sleepinessTime:string = '';
+  weekOffset:number = 0;
+  selectedDay:Date = new Date();
   selecting:boolean = false;
   selectedIds = new Set<string>();
 
   constructor(public sleepService:SleepService, private toastCtrl:ToastController) {
-    addIcons({ trashOutline });
+    addIcons({ trashOutline, chevronBack, chevronForward });
     this.resetSleepForm();
     this.resetSleepinessForm();
   }
@@ -50,70 +51,95 @@ export class HomePage {
     return SleepService.AllSleepData;
   }
 
-  /* Summary card */
+  /* Summary  */
   get todayString():string {
     return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
-  /* Most recently logged overnight sleep */
   get lastSleep():OvernightSleepData | undefined {
     const all = SleepService.AllOvernightData;
     return all[all.length - 1];
   }
 
-  /* Most recent sleepiness log */
   get lastSleepiness():StanfordSleepinessData | undefined {
     return [...SleepService.AllSleepinessData]
       .sort((a, b) => b.loggedAt.getTime() - a.loggedAt.getTime())[0];
   }
 
-    /* Logs grouped by day, newest day first. A night of sleep belongs to the day you woke up. */
-  get logGroups():{ label:string, logs:SleepData[] }[] {
-    const groups = new Map<string, { date:Date, logs:SleepData[] }>();
-    for (const d of this.allSleepData) {
-      const date = this.logTime(d);
-      const key = date.toDateString();
-      if (!groups.has(key)) {
-        groups.set(key, { date, logs: [] });
-      }
-      groups.get(key)!.logs.push(d);
+  /* History */
+  get weekDays():{ date:Date, letter:string, face:string, selected:boolean, isToday:boolean }[] {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - i - this.weekOffset * 7);
+      const sleep = this.sleepsOn(date)[0];
+      days.push({
+        date,
+        letter: date.toLocaleDateString('en-US', { weekday: 'narrow' }),
+        face: sleep ? this.sleepFace(sleep) : '',
+        selected: this.sameDay(date, this.selectedDay),
+        isToday: this.sameDay(date, new Date()),
+      });
     }
-    return [...groups.values()]
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .map(g => ({
-        label: this.dayLabel(g.date),
-        logs: g.logs.sort((a, b) => this.logTime(b).getTime() - this.logTime(a).getTime()),
-      }));
+    return days;
   }
 
-  /* The time used to place a log: wake time for sleep, logged time for sleepiness. */
-  private logTime(d:SleepData):Date {
-    return d instanceof OvernightSleepData ? d.end : d.loggedAt;
+  get weekLabel():string {
+    if (this.weekOffset === 0) return 'This week';
+    const days = this.weekDays;
+    const short = (d:Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return short(days[0].date) + ' – ' + short(days[6].date);
   }
 
-  /* "Today · Sun, Nov 22", "Yesterday · Sat, Nov 21", or "Fri, Nov 20". */
-  private dayLabel(date:Date):string {
-    const text = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  selectDay(date:Date) {
+    this.selectedDay = date;
+    this.cancelSelecting();
+  }
+
+  changeWeek(step:number) {
+    this.weekOffset = Math.max(0, this.weekOffset + step);
+    this.selectDay(this.weekDays[6].date);
+  }
+
+  private sameDay(a:Date, b:Date):boolean {
+    return a.toDateString() === b.toDateString();
+  }
+
+  private sleepsOn(date:Date):OvernightSleepData[] {
+    return SleepService.AllOvernightData.filter(d => this.sameDay(d.end, date));
+  }
+
+  get selectedSleeps():OvernightSleepData[] {
+    return this.sleepsOn(this.selectedDay);
+  }
+
+  get selectedSleepiness():StanfordSleepinessData[] {
+    return SleepService.AllSleepinessData
+      .filter(d => this.sameDay(d.loggedAt, this.selectedDay))
+      .sort((a, b) => a.loggedAt.getTime() - b.loggedAt.getTime());
+  }
+
+  get selectedLabel():string {
+    const date = this.selectedDay;
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === new Date().toDateString()) return 'Today · ' + text;
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday · ' + text;
-    return text;
+    const short = date.toLocaleDateString('en-US', { weekday: 'short' }) + ' ' + date.getDate();
+    if (this.sameDay(date, new Date())) return 'Today, ' + short;
+    if (this.sameDay(date, yesterday)) return 'Yesterday, ' + short;
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
-  /* Bedtime to wake time without dates, e.g. "11:11 PM → 8:11 AM". */
   sleepTimes(d:OvernightSleepData):string {
     const time = (t:Date) => t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return time(d.start) + ' → ' + time(d.end);
   }
 
-  /* Short length of sleep, e.g. "9h 0m". */
   durationText(d:OvernightSleepData):string {
     const mins = d.durationMinutes();
     return `${Math.floor(mins / 60)}h ${mins % 60}m`;
   }
 
-  /* Colour dot for "did I sleep enough?": 7h+ good, 6-7h okay, under 6h short. */
   sleepQuality(d:OvernightSleepData):'good' | 'okay' | 'short' {
     const hours = d.durationMinutes() / 60;
     if (hours >= 7) return 'good';
@@ -140,9 +166,6 @@ export class HomePage {
     return faces[this.sleepQuality(d)];
   }
 
-  asSleepiness(d:SleepData):StanfordSleepinessData {
-    return d as StanfordSleepinessData;
-  }
 
   /* Overnight sleep */
   resetSleepForm() {
@@ -163,9 +186,13 @@ export class HomePage {
     return `${Math.floor(this.sleepMinutes / 60)}h ${this.sleepMinutes % 60}m`;
   }
 
+  /* prevent error */
   get sleepError():string | null {
     if (this.sleepMinutes <= 0) return 'Wake time must be after bedtime.';
-    if (this.sleepMinutes > 24 * 60) return 'That is more than 24 hours. Check the dates.';
+    if (this.sleepMinutes > 24 * 60) {
+      const wakeDay = new Date(this.wakeTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `Bedtime is more than 24 hours before wake time. If you went to bed after midnight, set the bedtime date to ${wakeDay}.`;
+    }
     if (new Date(this.wakeTime).getTime() > Date.now()) return 'Wake time cannot be in the future.';
     return null;
   }
@@ -175,10 +202,13 @@ export class HomePage {
     const data = new OvernightSleepData(new Date(this.bedtime), new Date(this.wakeTime));
     this.sleepService.logOvernightData(data);
     this.showUndoToast(`Saved ${this.sleepDurationText} of sleep`, data);
+    this.weekOffset = 0;
+    this.selectedDay = data.end;
     this.resetSleepForm();
   }
 
   /* Sleepiness */
+
   resetSleepinessForm() {
     this.sleepinessValue = null;
     this.sleepinessTime = toLocalISO(new Date());
@@ -192,15 +222,6 @@ export class HomePage {
     this.resetSleepinessForm();
   }
 
-  /* Helpers */
-  isSleep(d:SleepData):d is OvernightSleepData {
-    return d instanceof OvernightSleepData;
-  }
-
-  timeString(d:SleepData):string {
-    return d.loggedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  }
-
   /* undo button */
   async showUndoToast(message:string, data:SleepData) {
     const toast = await this.toastCtrl.create({
@@ -210,6 +231,16 @@ export class HomePage {
       buttons: [{ text: 'Undo', role: 'cancel', handler: () => this.sleepService.deleteData(data) }],
     });
     await toast.present();
+  }
+
+  /* Helpers */
+
+  isSleep(d:SleepData):d is OvernightSleepData {
+    return d instanceof OvernightSleepData;
+  }
+
+  timeString(d:SleepData):string {
+    return d.loggedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
 
   /* Delete selected logs */

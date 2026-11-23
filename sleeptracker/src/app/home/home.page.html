@@ -11,7 +11,7 @@
     </ion-toolbar>
   </ion-header>
 
-  <!-- Summary-->
+  <!-- Summary -->
   <p class="today">{{ todayString }}</p>
   <div class="stats">
     <div class="stat stat-night">
@@ -39,7 +39,7 @@
     </div>
   </div>
 
-  <!--Log overnight sleep-->
+  <!-- Log overnight sleep -->
   <ion-list [inset]="true" class="card-night">
     <ion-list-header>
       <ion-label>Last night's sleep</ion-label>
@@ -53,8 +53,7 @@
       <ion-datetime-button datetime="wakeTime" slot="end"></ion-datetime-button>
     </ion-item>
     <ion-item>
-
-      <!--Live feedback-->
+      <!-- Live feedback -->
       @if (sleepError) {
         <ion-label color="danger" class="ion-text-wrap">{{ sleepError }}</ion-label>
       } @else {
@@ -67,12 +66,12 @@
     <ion-button expand="block" shape="round" (click)="saveSleep()" [disabled]="!!sleepError">Save Sleep</ion-button>
   </div>
 
-  <!--Log sleepiness-->
+  <!-- Log sleepiness  -->
   <ion-list [inset]="true" class="card-day">
     <ion-list-header>
       <ion-label>How sleepy do you feel?</ion-label>
     </ion-list-header>
-    <!-- 1-7 level -->
+    <!-- 1-7  -->
     <ion-item lines="none">
       <ion-segment [(ngModel)]="sleepinessValue" class="scale">
         @for (n of scaleOptions; track n) {
@@ -102,16 +101,38 @@
     </ion-button>
   </div>
 
-  <!-- Logged entries-->
+  <!-- History -->
   <ion-list [inset]="true" class="card-white">
     <ion-list-header>
-      <ion-label>Logged entries</ion-label>
+      <ion-label>{{ weekLabel }}</ion-label>
+      <ion-button (click)="changeWeek(1)" aria-label="Previous week">
+        <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
+      </ion-button>
+      <ion-button (click)="changeWeek(-1)" [disabled]="weekOffset === 0" aria-label="Next week">
+        <ion-icon slot="icon-only" name="chevron-forward"></ion-icon>
+      </ion-button>
+    </ion-list-header>
 
-      <!-- Trash icon  -->
+    <!-- One emoji per night -->
+    <div class="week">
+      @for (day of weekDays; track day.date.getTime()) {
+        <button type="button" class="week-day" [class.selected]="day.selected" [class.today]="day.isToday"
+          (click)="selectDay(day.date)">
+          <span class="week-letter">{{ day.letter }}</span>
+          <span class="week-face">{{ day.face || '·' }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Selected day -->
+    <ion-list-header class="day-header">
+      <ion-label>{{ selectedLabel }}</ion-label>
       @if (!selecting) {
-        <ion-button (click)="startSelecting()" aria-label="Select logs to delete">
-          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-        </ion-button>
+        @if (selectedSleeps.length + selectedSleepiness.length > 0) {
+          <ion-button (click)="startSelecting()" aria-label="Select logs to delete">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        }
       } @else {
         <ion-button (click)="cancelSelecting()">Cancel</ion-button>
         <ion-button color="danger" (click)="deleteSelected()" [disabled]="selectedIds.size === 0">
@@ -119,45 +140,39 @@
         </ion-button>
       }
     </ion-list-header>
-    @for (group of logGroups; track group.label) {
-      <ion-item-group>
-        <!-- Day header -->
-        <ion-item-divider>
-          <ion-label>{{ group.label }}</ion-label>
-        </ion-item-divider>
 
-        @for (d of group.logs; track d.id) {
-          <ion-item>
-            <!-- Checkbox when select -->
-            @if (selecting) {
-              <ion-checkbox slot="start" [checked]="selectedIds.has(d.id)" (ionChange)="toggleSelected(d)"
-                aria-label="Select this log"></ion-checkbox>
-            }
-            @if (isSleep(d)) {
-              <ion-label>
-                <h2>🌙 {{ sleepTimes(d) }}</h2>
-                <p>Sleep</p>
-              </ion-label>
-              <!-- Sleep length + face -->
-              <ion-note slot="end" class="duration">
-                {{ durationText(d) }} <span class="face" [attr.aria-label]="sleepQuality(d)">{{ sleepFace(d) }}</span>
-              </ion-note>
-            } @else {
-              <ion-label class="ion-text-wrap">
-                <h2>☕ Level {{ asSleepiness(d).value }}</h2>
-                <p>{{ scaleValues[asSleepiness(d).value] }}</p>
-              </ion-label>
-              <ion-note slot="end">{{ timeString(d) }}</ion-note>
-            }
-          </ion-item>
+    @for (s of selectedSleeps; track s.id) {
+      <ion-item>
+        @if (selecting) {
+          <ion-checkbox slot="start" [checked]="selectedIds.has(s.id)" (ionChange)="toggleSelected(s)"
+            aria-label="Select this log"></ion-checkbox>
         }
-      </ion-item-group>
-    } @empty {
-      <ion-item><ion-label>No logs yet.</ion-label></ion-item>
+        <ion-label>
+          <h2 class="day-sleep">{{ durationText(s) }} <span [attr.aria-label]="sleepQuality(s)">{{ sleepFace(s) }}</span></h2>
+          <p>🌙 {{ sleepTimes(s) }}</p>
+        </ion-label>
+      </ion-item>
+    }
+    @for (z of selectedSleepiness; track z.id) {
+      <ion-item>
+        @if (selecting) {
+          <ion-checkbox slot="start" [checked]="selectedIds.has(z.id)" (ionChange)="toggleSelected(z)"
+            aria-label="Select this log"></ion-checkbox>
+        }
+        <ion-label class="ion-text-wrap">
+          <h2>☕ Sleepiness {{ z.value }}</h2>
+          <p>{{ scaleValues[z.value] }}</p>
+        </ion-label>
+        <ion-note slot="end">{{ timeString(z) }}</ion-note>
+      </ion-item>
+    }
+    @if (selectedSleeps.length + selectedSleepiness.length === 0) {
+      <ion-item lines="none">
+        <ion-label><p>Nothing logged on this day.</p></ion-label>
+      </ion-item>
     }
   </ion-list>
 
-  <!-- Date/time pickers (bottom sheets) -->
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime id="bedtime" [(ngModel)]="bedtime" presentation="date-time"></ion-datetime>

@@ -2,39 +2,15 @@ ion-list {
   margin-bottom: 12px;
 }
 
-.duration {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-  color: var(--ion-text-color);
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.dot-good { background: var(--ion-color-success); }
-.dot-okay { background: var(--ion-color-warning); }
-.dot-short { background: var(--ion-color-danger); }
-
-.face {
-  font-size: 20px;
-}
-
-ion-card,
 ion-list.list-inset {
   border-radius: 28px;
   box-shadow: none;
 }
-
 ion-list.card-night { background: var(--card-night); }
 ion-list.card-day { background: var(--card-day); }
 ion-list.card-white { background: var(--card-white); }
 
-ion-card ion-list,
-ion-card ion-item,
+
 ion-list.list-inset ion-list-header,
 ion-list.list-inset ion-item,
 ion-list.list-inset ion-item-divider {
@@ -42,15 +18,12 @@ ion-list.list-inset ion-item-divider {
   background: transparent;
 }
 
-ion-card-title,
+
 ion-list-header ion-label {
   font-weight: 600;
 }
 
-ion-item-divider {
-  font-weight: 600;
-  color: var(--ion-color-medium);
-}
+
 
 ion-button[shape="round"] {
   height: 52px;
@@ -58,6 +31,7 @@ ion-button[shape="round"] {
   margin: 0 4px 8px;
 }
 
+/* 1-7 */
 .scale {
   --background: rgba(255, 255, 255, 0.6);
   width: 100%;
@@ -67,6 +41,8 @@ ion-button[shape="round"] {
   font-size: 17px;
   font-weight: 600;
 }
+
+/* Summary */
 
 .today {
   margin: 0 20px 10px;
@@ -123,3 +99,49 @@ ion-button[shape="round"] {
 .status-good { color: #1f7a45; }
 .status-okay { color: #a35a00; }
 .status-short { color: #c0392b; }
+
+/* History: week strip */
+
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 4px 12px 8px;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &.selected { background: var(--card-night); }
+}
+.week-letter {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+}
+.today .week-letter { color: var(--ion-text-color); }
+.week-face {
+  font-size: 22px;
+  line-height: 1;
+  min-height: 22px;
+  color: var(--ion-color-medium);
+}
+
+.day-header ion-label {
+  font-size: 17px;
+}
+
+.day-sleep {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+}
